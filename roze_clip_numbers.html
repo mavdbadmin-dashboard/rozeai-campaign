@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RozeAI — The Numbers Don't Lie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --navy: #0A1628;
+    --red: #FF2D20;
+    --white: #FFFFFF;
+    --gold: #FFB800;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: #000;
+    overflow: hidden;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  #stage {
+    width: 100vw; height: 100vh;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Pulse overlay */
+  #pulse-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+  }
+
+  .pulse-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid var(--red);
+    opacity: 0;
+    animation: pulseRing 2s ease-out infinite;
+  }
+  .pulse-ring:nth-child(1) { width: 200px; height: 200px; top: 50%; left: 50%; margin: -100px 0 0 -100px; animation-delay: 0s; }
+  .pulse-ring:nth-child(2) { width: 400px; height: 400px; top: 50%; left: 50%; margin: -200px 0 0 -200px; animation-delay: 0.4s; }
+  .pulse-ring:nth-child(3) { width: 600px; height: 600px; top: 50%; left: 50%; margin: -300px 0 0 -300px; animation-delay: 0.8s; }
+
+  @keyframes pulseRing {
+    0%   { opacity: 0.6; transform: scale(0.5); }
+    100% { opacity: 0; transform: scale(1.2); }
+  }
+
+  /* Scan line */
+  .scan-line {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+    opacity: 0.4;
+    animation: scan 3s linear infinite;
+    pointer-events: none;
+    z-index: 40;
+  }
+  @keyframes scan { 0% { top: 0; } 100% { top: 100vh; } }
+
+  /* Grid dots bg */
+  #grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(255,45,32,0.08) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Slides */
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .slide.active { opacity: 1; pointer-events: auto; }
+
+  /* Corner decorations */
+  .corner {
+    position: fixed;
+    width: 60px; height: 60px;
+    pointer-events: none;
+    z-index: 30;
+  }
+  .corner::before, .corner::after {
+    content: '';
+    position: absolute;
+    background: var(--red);
+  }
+  .corner::before { width: 100%; height: 2px; }
+  .corner::after  { width: 2px; height: 100%; }
+  .corner-tl { top: 20px; left: 20px; }
+  .corner-tr { top: 20px; right: 20px; transform: scaleX(-1); }
+  .corner-bl { bottom: 20px; left: 20px; transform: scaleY(-1); }
+  .corner-br { bottom: 20px; right: 20px; transform: scale(-1); }
+
+  /* Ticker tape */
+  #ticker {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 36px;
+    background: var(--red);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    z-index: 35;
+  }
+  #ticker-inner {
+    display: flex;
+    white-space: nowrap;
+    animation: tickerScroll 20s linear infinite;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: #fff;
+  }
+  @keyframes tickerScroll {
+    0%   { transform: translateX(100vw); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* ── SLIDE 1: $27 BILLION ── */
+  .stat-number {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(60px, 14vw, 160px);
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .stat-label {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(14px, 2vw, 22px);
+    font-weight: 400;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 16px;
+  }
+  .stat-sub {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(16px, 2.5vw, 28px);
+    font-weight: 300;
+    color: var(--gold);
+    margin-top: 12px;
+    letter-spacing: 0.02em;
+  }
+
+  /* Anim: slam (scale from 0) */
+  @keyframes slam {
+    0%   { transform: scale(0.2) rotate(-3deg); opacity: 0; filter: blur(20px); }
+    60%  { transform: scale(1.08) rotate(0.5deg); opacity: 1; filter: blur(0); }
+    80%  { transform: scale(0.97); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .anim-slam { animation: slam 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+  /* Anim: slide from left */
+  @keyframes slideLeft {
+    0%   { transform: translateX(-120px); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+  }
+  .anim-slide { animation: slideLeft 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+  /* Anim: typewriter */
+  .typewriter-text {
+    overflow: hidden;
+    border-right: 4px solid var(--red);
+    white-space: nowrap;
+    width: 0;
+    animation: typewrite 1.2s steps(15, end) forwards, cursorBlink 0.7s step-end 1.2s infinite;
+  }
+  @keyframes typewrite { to { width: 100%; } }
+  @keyframes cursorBlink { 0%, 100% { border-color: var(--red); } 50% { border-color: transparent; } }
+
+  /* Anim: flip up */
+  @keyframes flipUp {
+    0%   { transform: rotateX(90deg) translateY(40px); opacity: 0; transform-origin: bottom; }
+    100% { transform: rotateX(0) translateY(0); opacity: 1; }
+  }
+  .anim-flip { animation: flipUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; perspective: 600px; }
+
+  /* Anim: fade + rise */
+  @keyframes riseIn {
+    0%   { transform: translateY(30px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  .anim-rise { animation: riseIn 0.7s ease forwards; }
+
+  /* Wipe transition */
+  @keyframes wipeIn {
+    0%   { clip-path: inset(0 100% 0 0); opacity: 1; }
+    100% { clip-path: inset(0 0% 0 0); opacity: 1; }
+  }
+
+  /* Counter animation */
+  .counter-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  /* Red line accent */
+  .red-line {
+    width: 80px; height: 4px;
+    background: var(--red);
+    margin: 20px auto 0;
+    transform-origin: left;
+  }
+  @keyframes lineGrow { 0% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
+  .anim-line { animation: lineGrow 0.5s 0.4s ease forwards; transform: scaleX(0); }
+
+  /* Slide 4: KOREAN AIR FORCE */
+  .logo-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(24px, 5vw, 64px);
+    font-weight: 700;
+    color: var(--gold);
+    text-align: center;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .logo-sub { color: rgba(255,255,255,0.5); font-size: 0.45em; letter-spacing: 0.25em; display: block; margin-top: 8px; }
+
+  /* Slide 5: FIRST EVER */
+  .first-ever {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(40px, 9vw, 110px);
+    font-weight: 700;
+    background: linear-gradient(135deg, #fff 0%, var(--gold) 60%, var(--red) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-align: center;
+    letter-spacing: -0.02em;
+  }
+
+  /* Slide 6: Final */
+  .final-slide { background: #000; }
+  .roze-logo-final {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(36px, 7vw, 90px);
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.01em;
+  }
+  .roze-logo-final span { color: var(--red); }
+  .ticker-final {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(20px, 3.5vw, 44px);
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    margin-top: 8px;
+  }
+  .nasdaq-final {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(13px, 2vw, 20px);
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 12px;
+  }
+  @keyframes redGlow {
+    0%, 100% { text-shadow: 0 0 30px rgba(255,45,32,0.5), 0 0 60px rgba(255,45,32,0.3); }
+    50%       { text-shadow: 0 0 60px rgba(255,45,32,0.9), 0 0 120px rgba(255,45,32,0.6); }
+  }
+  .glow-red { animation: redGlow 2s ease-in-out infinite; }
+
+  /* Progress bar */
+  #progress-bar {
+    position: fixed;
+    bottom: 36px; left: 0;
+    height: 3px;
+    background: var(--red);
+    z-index: 36;
+    transition: width 0.1s linear;
+    opacity: 0.7;
+  }
+
+  /* Flash wipe transition */
+  #wipe-flash {
+    position: fixed;
+    inset: 0;
+    background: var(--red);
+    z-index: 45;
+    opacity: 0;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="grid-bg"></div>
+<div class="scan-line"></div>
+<div id="pulse-overlay">
+  <div class="pulse-ring"></div>
+  <div class="pulse-ring"></div>
+  <div class="pulse-ring"></div>
+</div>
+
+<div class="corner corner-tl"></div>
+<div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div>
+<div class="corner corner-br"></div>
+
+<div id="wipe-flash"></div>
+
+<div id="stage">
+
+  <!-- SLIDE 1: $27 BILLION -->
+  <div class="slide" id="s1">
+    <div class="stat-number anim-slam" style="color:var(--white)">$27 BILLION</div>
+    <div class="red-line anim-line"></div>
+    <div class="stat-label" style="margin-top:24px; animation: riseIn 0.5s 0.6s ease both;">AI SAFETY MARKET SIZE</div>
+    <div class="stat-sub" style="animation: riseIn 0.5s 0.9s ease both;">The market is enormous.</div>
+  </div>
+
+  <!-- SLIDE 2: 10 YEARS -->
+  <div class="slide" id="s2">
+    <div class="stat-number anim-slide" style="color:var(--red)">10 YEARS</div>
+    <div class="red-line anim-line" style="background:var(--gold)"></div>
+    <div class="stat-label" style="margin-top:24px; animation: riseIn 0.5s 0.6s ease both;">OF PROPRIETARY DATA</div>
+    <div class="stat-sub" style="animation: riseIn 0.5s 0.9s ease both;">A decade of data. No one else has it.</div>
+  </div>
+
+  <!-- SLIDE 3: 93 CUSTOMERS -->
+  <div class="slide" id="s3">
+    <div class="counter-wrap">
+      <div class="stat-number" id="counter-num" style="color:var(--gold)">0</div>
+    </div>
+    <div class="stat-label" style="animation: riseIn 0.5s 0.2s ease both;">ENTERPRISE CUSTOMERS</div>
+    <div class="red-line anim-line" style="background:var(--gold)"></div>
+    <div class="stat-sub" style="animation: riseIn 0.5s 0.8s ease both;">And growing.</div>
+  </div>
+
+  <!-- SLIDE 4: KOREAN AIR FORCE -->
+  <div class="slide" id="s4">
+    <div class="logo-text anim-flip">
+      KOREAN AIR FORCE
+      <span class="logo-sub">CERTIFIED ✦ DEPLOYED ✦ TRUSTED</span>
+    </div>
+    <div class="red-line anim-line" style="background:var(--gold); width:120px; margin-top:28px;"></div>
+    <div class="stat-sub" style="animation: riseIn 0.5s 0.8s ease both; margin-top:20px;">Government-grade trust.</div>
+  </div>
+
+  <!-- SLIDE 5: FIRST EVER -->
+  <div class="slide" id="s5">
+    <div class="stat-label" style="animation: riseIn 0.3s ease both; color:rgba(255,255,255,0.4); margin-bottom:16px;">INTRODUCING THE WORLD'S</div>
+    <div class="first-ever anim-slam">FIRST EVER</div>
+    <div class="red-line anim-line" style="width:100px;"></div>
+    <div class="stat-sub" style="animation: riseIn 0.5s 0.7s ease both; font-size:clamp(14px,2.2vw,24px);">Disaster-care AI semiconductor.</div>
+  </div>
+
+  <!-- SLIDE 6: FINAL -->
+  <div class="slide final-slide" id="s6">
+    <div class="roze-logo-final glow-red" style="animation-name:slam,redGlow; animation-duration:0.6s,2s; animation-fill-mode:both,none; animation-iteration-count:1,infinite; animation-delay:0s,0.8s;">
+      Roze<span>AI</span>
+    </div>
+    <div class="ticker-final" style="animation: riseIn 0.5s 0.5s ease both;">$RZAI</div>
+    <div class="nasdaq-final" style="animation: riseIn 0.5s 0.8s ease both;">Nasdaq IPO — Physical AI for Disaster Prevention</div>
+    <div style="margin-top:32px; animation: riseIn 0.5s 1.1s ease both;">
+      <div style="width:160px; height:2px; background:linear-gradient(90deg,transparent,var(--red),transparent); margin:0 auto;"></div>
+    </div>
+    <div style="font-family:'Inter',sans-serif; font-size:clamp(11px,1.5vw,14px); color:rgba(255,255,255,0.3); margin-top:20px; letter-spacing:0.08em; animation: riseIn 0.5s 1.4s ease both;">rozedraft1.netlify.app</div>
+  </div>
+
+</div>
+
+<!-- Ticker -->
+<div id="ticker">
+  <div id="ticker-inner">
+    &nbsp;&nbsp;&nbsp;&nbsp;$RZAI&nbsp;·&nbsp;NASDAQ IPO&nbsp;·&nbsp;PHYSICAL AI FOR DISASTER PREVENTION&nbsp;·&nbsp;$27B MARKET&nbsp;·&nbsp;10 YEARS OF DATA&nbsp;·&nbsp;93 ENTERPRISE CUSTOMERS&nbsp;·&nbsp;KOREAN AIR FORCE CERTIFIED&nbsp;·&nbsp;WORLD'S FIRST DISASTER-CARE AI SEMICONDUCTOR&nbsp;·&nbsp;ROZEAI.COM&nbsp;·&nbsp;$RZAI&nbsp;·&nbsp;NASDAQ IPO&nbsp;·&nbsp;PHYSICAL AI FOR DISASTER PREVENTION&nbsp;·&nbsp;$27B MARKET&nbsp;·&nbsp;10 YEARS OF DATA&nbsp;·&nbsp;93 ENTERPRISE CUSTOMERS&nbsp;·&nbsp;
+  </div>
+</div>
+
+<div id="progress-bar" style="width:0%"></div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const progressBar = document.getElementById('progress-bar');
+  const wipeFlash = document.getElementById('wipe-flash');
+  const counterNum = document.getElementById('counter-num');
+
+  // Slide durations in ms
+  const durations = [3000, 3000, 3200, 3000, 3000, 5000];
+  const totalTime = durations.reduce((a,b) => a+b, 0) + 3000; // +3s pause before loop
+  let current = 0;
+  let elapsed = 0;
+  let progStart;
+
+  function showSlide(idx) {
+    slides.forEach((s, i) => {
+      s.classList.remove('active');
+      s.style.animation = '';
+      // Reset animations by clone trick
+    });
+
+    // Flash wipe
+    wipeFlash.style.opacity = '0.6';
+    wipeFlash.style.transition = 'opacity 0.15s ease';
+    setTimeout(() => {
+      wipeFlash.style.opacity = '0';
+    }, 150);
+
+    const slide = slides[idx];
+    slide.classList.add('active');
+
+    // Trigger counter on slide 3
+    if (idx === 2) {
+      animateCounter(0, 93, 2000, counterNum);
+    }
+  }
+
+  function animateCounter(from, to, duration, el) {
+    const start = performance.now();
+    function update(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(from + (to - from) * eased);
+      if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  }
+
+  function updateProgress(now) {
+    if (!progStart) progStart = now;
+    const slideElapsed = now - progStart;
+    const dur = durations[current];
+    const pct = Math.min(slideElapsed / dur * 100, 100);
+    progressBar.style.width = pct + '%';
+    if (slideElapsed < dur) {
+      requestAnimationFrame(updateProgress);
+    }
+  }
+
+  function nextSlide() {
+    current = (current + 1) % slides.length;
+    progStart = null;
+    showSlide(current);
+    requestAnimationFrame(updateProgress);
+    const nextDur = current === 0 ? durations[0] + 3000 : durations[current];
+    setTimeout(nextSlide, nextDur);
+  }
+
+  // Start
+  showSlide(0);
+  requestAnimationFrame(updateProgress);
+  setTimeout(nextSlide, durations[0]);
+</script>
+</body>
+</html>

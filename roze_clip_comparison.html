@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RozeAI — Writing vs. Protecting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --navy: #0A1628;
+    --red: #FF2D20;
+    --white: #FFFFFF;
+    --gold: #FFB800;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: #000;
+    overflow: hidden;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  /* ── PHASES ── */
+  /* Phase 0: split screen */
+  /* Phase 1: merge + tagline */
+  /* Phase 2: final */
+
+  #stage {
+    width: 100vw; height: 100vh;
+    position: relative;
+    display: flex;
+    align-items: stretch;
+  }
+
+  /* Split panels */
+  #left-panel, #right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: flex 1.2s cubic-bezier(0.77, 0, 0.18, 1);
+    overflow: hidden;
+  }
+
+  #left-panel  { background: var(--navy); }
+  #right-panel { background: #1a0600; }
+
+  /* Divider line */
+  #divider {
+    width: 3px;
+    background: linear-gradient(180deg, transparent, var(--red) 30%, var(--red) 70%, transparent);
+    position: relative;
+    z-index: 10;
+    flex-shrink: 0;
+    transition: opacity 1s ease;
+  }
+  #divider::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; left: 50%;
+    width: 30px;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, transparent, rgba(255,45,32,0.15) 30%, rgba(255,45,32,0.15) 70%, transparent);
+    filter: blur(8px);
+  }
+
+  /* Panel labels */
+  .panel-label {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(10px, 1.2vw, 13px);
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    opacity: 0;
+    margin-bottom: 32px;
+    transition: opacity 0.5s ease;
+  }
+  #left-panel  .panel-label { color: rgba(255,255,255,0.4); }
+  #right-panel .panel-label { color: var(--red); }
+
+  /* Feature list items */
+  .feature-list {
+    list-style: none;
+    text-align: center;
+  }
+  .feature-list li {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(13px, 1.6vw, 18px);
+    font-weight: 400;
+    color: rgba(255,255,255,0.7);
+    padding: 8px 0;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    letter-spacing: 0.02em;
+  }
+  #right-panel .feature-list li { transform: translateX(20px); }
+  .feature-list li.visible { opacity: 1; transform: translateX(0); }
+  .feature-list li.highlight { color: var(--white); font-weight: 600; }
+
+  /* Typewriter display */
+  #typewriter-display {
+    font-family: 'Inter', monospace;
+    font-size: clamp(14px, 1.8vw, 20px);
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 28px;
+    min-height: 28px;
+    letter-spacing: 0.04em;
+  }
+  #type-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.1em;
+    background: rgba(255,255,255,0.5);
+    vertical-align: middle;
+    margin-left: 2px;
+    animation: blink 0.7s step-end infinite;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* Sensor rings (right panel) */
+  #sensor-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin-bottom: 32px;
+    flex-shrink: 0;
+  }
+  .sensor-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid var(--red);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    animation: sensorPulse 2.4s ease-out infinite;
+  }
+  .sensor-ring:nth-child(1) { width: 30px;  height: 30px;  animation-delay: 0s;    border-color: var(--red); }
+  .sensor-ring:nth-child(2) { width: 60px;  height: 60px;  animation-delay: 0.4s;  border-color: rgba(255,45,32,0.7); }
+  .sensor-ring:nth-child(3) { width: 90px;  height: 90px;  animation-delay: 0.8s;  border-color: rgba(255,45,32,0.45); }
+  .sensor-ring:nth-child(4) { width: 120px; height: 120px; animation-delay: 1.2s;  border-color: rgba(255,45,32,0.2); }
+  .sensor-dot {
+    position: absolute;
+    width: 10px; height: 10px;
+    background: var(--red);
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 20px var(--red), 0 0 40px rgba(255,45,32,0.5);
+    animation: dotPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes sensorPulse {
+    0%   { transform: translate(-50%,-50%) scale(0.3); opacity: 0.8; }
+    100% { transform: translate(-50%,-50%) scale(1.1); opacity: 0; }
+  }
+  @keyframes dotPulse {
+    0%, 100% { box-shadow: 0 0 10px var(--red), 0 0 20px rgba(255,45,32,0.5); }
+    50%       { box-shadow: 0 0 30px var(--red), 0 0 60px rgba(255,45,32,0.8); }
+  }
+
+  /* ── MERGE / FINAL SCREENS ── */
+  #merge-screen, #final-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 20;
+    transition: opacity 0.8s ease;
+    background: #000;
+    text-align: center;
+    padding: 40px;
+  }
+  #merge-screen.visible, #final-screen.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .merge-headline {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(22px, 4vw, 54px);
+    font-weight: 300;
+    color: var(--white);
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    max-width: 800px;
+  }
+  .merge-headline em { font-style: normal; font-weight: 700; color: var(--gold); }
+
+  .final-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(32px, 6vw, 76px);
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.01em;
+  }
+  .final-logo span { color: var(--red); }
+  .final-tagline {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(14px, 2vw, 22px);
+    color: rgba(255,255,255,0.6);
+    margin-top: 12px;
+    letter-spacing: 0.04em;
+  }
+  .final-ticker {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(18px, 3vw, 40px);
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    margin-top: 24px;
+  }
+  .final-nasdaq {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(11px, 1.5vw, 16px);
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+
+  @keyframes fadeUp {
+    0%   { opacity: 0; transform: translateY(24px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { opacity: 0; animation: fadeUp 0.7s ease forwards; }
+
+  /* vs badge */
+  .vs-badge {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 15;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(12px, 1.8vw, 20px);
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 0.15em;
+    background: #000;
+    padding: 8px 14px;
+    border: 2px solid var(--red);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  /* Bottom bar */
+  #bottom-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: rgba(255,255,255,0.05);
+  }
+  #bottom-progress {
+    height: 100%;
+    background: linear-gradient(90deg, var(--navy), var(--red));
+    width: 0%;
+    transition: width 0.2s linear;
+  }
+
+  /* Ambient background glow */
+  #left-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 50%, rgba(10,22,40,0.9) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  #right-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 50%, rgba(255,45,32,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div id="left-panel">
+    <span class="panel-label" id="left-label">Generative AI</span>
+    <div id="typewriter-display"><span id="type-text"></span><span id="type-cursor"></span></div>
+    <ul class="feature-list" id="left-features">
+      <li>Creates content</li>
+      <li>Generates images</li>
+      <li>Writes code</li>
+      <li>Answers questions</li>
+    </ul>
+  </div>
+
+  <div id="divider"></div>
+
+  <div id="right-panel">
+    <span class="panel-label" id="right-label">Physical AI</span>
+    <div id="sensor-container">
+      <div class="sensor-ring"></div>
+      <div class="sensor-ring"></div>
+      <div class="sensor-ring"></div>
+      <div class="sensor-ring"></div>
+      <div class="sensor-dot"></div>
+    </div>
+    <ul class="feature-list" id="right-features">
+      <li class="highlight">Senses the real world</li>
+      <li class="highlight">Predicts disasters</li>
+      <li class="highlight">Protects lives</li>
+      <li class="highlight">Stops fires before they start</li>
+    </ul>
+  </div>
+</div>
+
+<div class="vs-badge" id="vs-badge">VS</div>
+
+<!-- Merge screen -->
+<div id="merge-screen">
+  <div class="merge-headline fade-up" style="animation-delay:0.2s">
+    <em>One creates.</em> One protects.<br>The world needs both.
+  </div>
+  <div style="width:80px; height:3px; background:var(--red); margin:32px auto; opacity:0; animation:fadeUp 0.5s 0.7s ease forwards;"></div>
+</div>
+
+<!-- Final screen -->
+<div id="final-screen">
+  <div class="final-logo fade-up" style="animation-delay:0.1s">Roze<span>AI</span></div>
+  <div class="final-tagline fade-up" style="animation-delay:0.4s">Physical AI for a safer world</div>
+  <div class="final-ticker fade-up" style="animation-delay:0.7s">$RZAI — Nasdaq IPO</div>
+  <div class="final-nasdaq fade-up" style="animation-delay:1s">rozedraft1.netlify.app</div>
+</div>
+
+<div id="bottom-bar"><div id="bottom-progress"></div></div>
+
+<script>
+  // Typewriter
+  const typeEl = document.getElementById('type-text');
+  const phrases = ["The quick brown fox...", "Generate an image...", "Write me some code...", "Answer this question..."];
+  let phraseIdx = 0, charIdx = 0, isDeleting = false;
+
+  function typeWriter() {
+    const phrase = phrases[phraseIdx];
+    if (!isDeleting) {
+      typeEl.textContent = phrase.slice(0, charIdx + 1);
+      charIdx++;
+      if (charIdx === phrase.length) {
+        isDeleting = true;
+        setTimeout(typeWriter, 1200);
+        return;
+      }
+      setTimeout(typeWriter, 70);
+    } else {
+      typeEl.textContent = phrase.slice(0, charIdx - 1);
+      charIdx--;
+      if (charIdx === 0) {
+        isDeleting = false;
+        phraseIdx = (phraseIdx + 1) % phrases.length;
+        setTimeout(typeWriter, 400);
+        return;
+      }
+      setTimeout(typeWriter, 35);
+    }
+  }
+
+  // Feature list reveal
+  function revealFeatures(listId, delay) {
+    const items = document.querySelectorAll(`#${listId} li`);
+    items.forEach((item, i) => {
+      setTimeout(() => item.classList.add('visible'), delay + i * 350);
+    });
+  }
+
+  // Panel labels
+  function showLabel(id, delay) {
+    setTimeout(() => {
+      document.getElementById(id).style.opacity = '1';
+    }, delay);
+  }
+
+  // VS badge
+  function showVS(delay) {
+    setTimeout(() => {
+      document.getElementById('vs-badge').style.opacity = '1';
+    }, delay);
+    setTimeout(() => {
+      document.getElementById('vs-badge').style.opacity = '0';
+    }, delay + 3000);
+  }
+
+  // Progress bar
+  const totalDuration = 32000;
+  let startTime = null;
+  function updateProgress(ts) {
+    if (!startTime) startTime = ts;
+    const elapsed = ts - startTime;
+    const pct = Math.min(elapsed / totalDuration * 100, 100);
+    document.getElementById('bottom-progress').style.width = pct + '%';
+    if (pct < 100) requestAnimationFrame(updateProgress);
+  }
+
+  // SEQUENCE
+  function runSequence() {
+    // Start typewriter immediately
+    typeWriter();
+    showLabel('left-label', 400);
+    showLabel('right-label', 400);
+    showVS(800);
+    revealFeatures('left-features', 1200);
+    revealFeatures('right-features', 1800);
+
+    // At 12s: merge
+    setTimeout(() => {
+      document.getElementById('merge-screen').classList.add('visible');
+    }, 12000);
+
+    // At 18s: show final
+    setTimeout(() => {
+      document.getElementById('merge-screen').classList.remove('visible');
+      document.getElementById('final-screen').classList.add('visible');
+    }, 19000);
+
+    // At 28s: restart
+    setTimeout(() => {
+      location.reload();
+    }, 30000);
+  }
+
+  requestAnimationFrame(updateProgress);
+  runSequence();
+</script>
+</body>
+</html>

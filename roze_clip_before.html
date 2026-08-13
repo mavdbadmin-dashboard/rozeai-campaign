@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RozeAI — Before</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --navy: #0A1628;
+    --red: #FF2D20;
+    --white: #FFFFFF;
+    --gold: #FFB800;
+    --green: #00E87B;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: #000;
+    overflow: hidden;
+    font-family: 'Space Grotesk', sans-serif;
+    cursor: none;
+  }
+
+  /* ── WORD STAGE ── */
+  #word-stage {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    padding: 60px;
+    text-align: center;
+  }
+
+  .word-line {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 300;
+    color: var(--white);
+    line-height: 1.2;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+    letter-spacing: -0.01em;
+    font-size: clamp(20px, 3.5vw, 48px);
+    margin: 6px 0;
+  }
+  .word-line.size-xl {
+    font-size: clamp(28px, 5vw, 68px);
+    font-weight: 700;
+  }
+  .word-line.size-sm {
+    font-size: clamp(14px, 2vw, 24px);
+    color: rgba(255,255,255,0.6);
+    font-weight: 300;
+  }
+  .word-line.color-red  { color: var(--red); }
+  .word-line.color-gold { color: var(--gold); }
+  .word-line.color-dim  { color: rgba(255,255,255,0.4); }
+  .word-line.italic { font-style: italic; font-weight: 300; }
+  .word-line.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── RED FLASH ── */
+  #red-flash {
+    position: fixed;
+    inset: 0;
+    background: var(--red);
+    opacity: 0;
+    z-index: 5;
+    pointer-events: none;
+    transition: opacity 0.1s ease;
+  }
+
+  /* ── BUILDING VISUALIZATION ── */
+  #building-stage {
+    position: fixed;
+    inset: 0;
+    z-index: 8;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  #building-stage.visible { opacity: 1; }
+
+  #building-svg {
+    width: min(500px, 85vw);
+    height: auto;
+  }
+
+  .building-outline {
+    fill: none;
+    stroke: rgba(255,255,255,0.15);
+    stroke-width: 1.5;
+  }
+  .floor-line {
+    stroke: rgba(255,255,255,0.06);
+    stroke-width: 0.8;
+  }
+
+  /* Sensor nodes */
+  .sensor-node {
+    fill: rgba(255,255,255,0.3);
+    transition: fill 0.5s ease;
+  }
+  .sensor-node.alert  { fill: var(--red); filter: url(#glow-red); }
+  .sensor-node.safe   { fill: var(--green); filter: url(#glow-green); }
+  .sensor-node.active { fill: var(--gold); filter: url(#glow-gold); animation: nodePulse 1s ease-in-out infinite; }
+
+  @keyframes nodePulse {
+    0%, 100% { r: 5; }
+    50%       { r: 7; }
+  }
+
+  /* Data stream lines */
+  .data-stream {
+    stroke: rgba(255,184,0,0.4);
+    stroke-width: 1;
+    fill: none;
+    stroke-dasharray: 4 4;
+    animation: streamFlow 1.5s linear infinite;
+  }
+  @keyframes streamFlow {
+    0%   { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: -16; }
+  }
+
+  /* Node ring pulse */
+  .node-ring {
+    fill: none;
+    stroke: var(--red);
+    stroke-width: 1;
+    opacity: 0;
+    animation: ringExpand 1.5s ease-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  @keyframes ringExpand {
+    0%   { r: 5px; opacity: 0.7; }
+    100% { r: 20px; opacity: 0; }
+  }
+
+  /* ── MASSIVE BEFORE ── */
+  #massive-before {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 15;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+  #massive-before.visible { opacity: 1; }
+  .before-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(80px, 20vw, 240px);
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.04em;
+    line-height: 1;
+    animation: beforeAnim 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  @keyframes beforeAnim {
+    0%   { transform: scale(0.7); opacity: 0; filter: blur(30px); }
+    100% { transform: scale(1); opacity: 1; filter: blur(0); }
+  }
+
+  /* ── FINAL CARD ── */
+  #final-card {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 1s ease;
+    padding: 40px;
+  }
+  #final-card.visible { opacity: 1; }
+  .final-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(36px, 7vw, 90px);
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.02em;
+    opacity: 0;
+    animation: finalFadeUp 0.8s 0.3s ease forwards;
+  }
+  .final-name span { color: var(--red); }
+  .final-desc {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(14px, 2.2vw, 24px);
+    color: rgba(255,255,255,0.55);
+    margin-top: 12px;
+    letter-spacing: 0.04em;
+    opacity: 0;
+    animation: finalFadeUp 0.8s 0.7s ease forwards;
+  }
+  .final-rzai {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(18px, 3vw, 40px);
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    margin-top: 28px;
+    opacity: 0;
+    animation: finalFadeUp 0.8s 1.1s ease forwards;
+  }
+  .final-url {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(12px, 1.5vw, 16px);
+    color: rgba(255,255,255,0.3);
+    margin-top: 12px;
+    letter-spacing: 0.1em;
+    opacity: 0;
+    animation: finalFadeUp 0.8s 1.5s ease forwards;
+  }
+  @keyframes finalFadeUp {
+    0%   { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Counter */
+  #counter-display {
+    font-family: 'Space Grotesk', monospace;
+    font-size: clamp(32px, 6vw, 80px);
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 0.1em;
+    opacity: 0;
+    margin: 4px 0;
+  }
+
+  /* Subtle scanline */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Progress line */
+  #progress-line {
+    position: fixed;
+    bottom: 0; left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--red), var(--gold));
+    width: 0%;
+    z-index: 50;
+    transition: width 0.3s linear;
+    opacity: 0.6;
+  }
+</style>
+</head>
+<body>
+
+<div id="red-flash"></div>
+
+<!-- Word stage -->
+<div id="word-stage">
+  <!-- lines injected by JS -->
+</div>
+
+<!-- Building stage -->
+<div id="building-stage">
+  <svg id="building-svg" viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="glow-red">
+        <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="glow-green">
+        <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="glow-gold">
+        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+
+    <!-- Building outline -->
+    <rect x="80" y="60" width="240" height="240" class="building-outline"/>
+    <!-- Floors -->
+    <line x1="80" y1="120" x2="320" y2="120" class="floor-line"/>
+    <line x1="80" y1="180" x2="320" y2="180" class="floor-line"/>
+    <line x1="80" y1="240" x2="320" y2="240" class="floor-line"/>
+    <!-- Columns -->
+    <line x1="160" y1="60" x2="160" y2="300" class="floor-line"/>
+    <line x1="240" y1="60" x2="240" y2="300" class="floor-line"/>
+    <!-- Roof detail -->
+    <line x1="100" y1="60" x2="300" y2="60" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+
+    <!-- Data streams -->
+    <!-- Node A → B -->
+    <line x1="120" y1="90" x2="200" y2="90" class="data-stream" style="animation-delay:0s"/>
+    <line x1="200" y1="90" x2="280" y2="150" class="data-stream" style="animation-delay:0.3s"/>
+    <line x1="120" y1="150" x2="200" y2="210" class="data-stream" style="animation-delay:0.6s"/>
+    <line x1="200" y1="210" x2="280" y2="210" class="data-stream" style="animation-delay:0.2s"/>
+    <line x1="120" y1="270" x2="200" y2="270" class="data-stream" style="animation-delay:0.5s"/>
+    <line x1="200" y1="270" x2="280" y2="270" class="data-stream" style="animation-delay:0.1s"/>
+
+    <!-- Sensor nodes -->
+    <circle id="n1" cx="120" cy="90"  r="5" class="sensor-node active"/>
+    <circle id="n2" cx="200" cy="90"  r="5" class="sensor-node active"/>
+    <circle id="n3" cx="280" cy="90"  r="5" class="sensor-node active"/>
+    <circle id="n4" cx="120" cy="150" r="5" class="sensor-node active"/>
+    <circle id="n5" cx="200" cy="150" r="5" class="sensor-node active"/>
+    <circle id="n6" cx="280" cy="150" r="5" class="sensor-node active"/>
+    <circle id="n7" cx="120" cy="210" r="5" class="sensor-node active"/>
+    <circle id="n8" cx="200" cy="210" r="5" class="sensor-node active"/>
+    <circle id="n9" cx="280" cy="210" r="5" class="sensor-node active"/>
+    <circle id="n10" cx="120" cy="270" r="5" class="sensor-node active"/>
+    <circle id="n11" cx="200" cy="270" r="5" class="sensor-node active"/>
+    <circle id="n12" cx="280" cy="270" r="5" class="sensor-node active"/>
+
+    <!-- Alert ring (hidden initially) -->
+    <circle id="alert-ring" cx="120" cy="150" r="5" class="node-ring" style="display:none"/>
+
+    <!-- Label -->
+    <text x="200" y="20" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-family="Inter,sans-serif" font-size="11" letter-spacing="3">ROZEAI SENSOR NETWORK</text>
+    <text x="200" y="315" text-anchor="middle" fill="rgba(255,184,0,0.6)" font-family="Inter,sans-serif" font-size="10" letter-spacing="2">MONITORING 10,000 DATA POINTS/SEC</text>
+  </svg>
+</div>
+
+<!-- Massive BEFORE -->
+<div id="massive-before">
+  <div class="before-text">BEFORE.</div>
+</div>
+
+<!-- Final card -->
+<div id="final-card">
+  <div class="final-name">Roze<span>AI</span></div>
+  <div class="final-desc">Physical AI for Disaster Prevention</div>
+  <div class="final-rzai">$RZAI — Nasdaq IPO</div>
+  <div class="final-url">rozedraft1.netlify.app</div>
+</div>
+
+<div id="progress-line"></div>
+
+<script>
+  const wordStage = document.getElementById('word-stage');
+  const redFlash = document.getElementById('red-flash');
+  const buildingStage = document.getElementById('building-stage');
+  const massiveBefore = document.getElementById('massive-before');
+  const finalCard = document.getElementById('final-card');
+  const counterDisplay = document.getElementById('counter-display');
+  const progressLine = document.getElementById('progress-line');
+
+  // Total duration ~47s
+  const TOTAL = 47000;
+  const startTs = performance.now();
+  function updateProgress() {
+    const pct = Math.min((performance.now() - startTs) / TOTAL * 100, 100);
+    progressLine.style.width = pct + '%';
+    if (pct < 100) requestAnimationFrame(updateProgress);
+  }
+  requestAnimationFrame(updateProgress);
+
+  // Word line factory
+  function makeLine(text, classes = []) {
+    const el = document.createElement('div');
+    el.className = ['word-line', ...classes].join(' ');
+    el.textContent = text;
+    wordStage.appendChild(el);
+    return el;
+  }
+
+  function showLine(el, delay) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        el.classList.add('visible');
+        resolve();
+      }, delay);
+    });
+  }
+
+  function hideLine(el, delay) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        el.classList.remove('visible');
+        el.style.opacity = '0';
+        resolve();
+      }, delay);
+    });
+  }
+
+  function pulseRed(delay) {
+    setTimeout(() => {
+      redFlash.style.opacity = '0.3';
+      setTimeout(() => { redFlash.style.opacity = '0'; }, 400);
+    }, delay);
+  }
+
+  // Clear all lines
+  function clearLines(delay) {
+    setTimeout(() => {
+      Array.from(wordStage.children).forEach(el => {
+        el.classList.remove('visible');
+        el.style.transition = 'opacity 0.5s ease';
+        el.style.opacity = '0';
+      });
+      setTimeout(() => { wordStage.innerHTML = ''; }, 600);
+    }, delay);
+  }
+
+  // ── SEQUENCE ──
+  async function run() {
+    // ACT 1: Every fire... started as data.
+    let l1 = makeLine('Every fire...', ['size-xl']);
+    await showLine(l1, 1200);
+    await new Promise(r => setTimeout(r, 2200));
+    let l2 = makeLine('...started as data.', ['size-xl', 'color-dim', 'italic']);
+    await showLine(l2, 0);
+    pulseRed(1800);
+
+    // ACT 2: Data points
+    clearLines(3200);
+    await new Promise(r => setTimeout(r, 4000));
+    let l3 = makeLine('A temperature spike.', ['size-sm', 'color-dim']);
+    await showLine(l3, 0);
+    let l4 = makeLine('A pressure change.', ['size-sm', 'color-dim']);
+    await showLine(l4, 700);
+    let l5 = makeLine('A sensor reading no one noticed.', ['size-sm', 'color-dim']);
+    await showLine(l5, 1400);
+
+    // Until now
+    clearLines(3800);
+    await new Promise(r => setTimeout(r, 4700));
+    let l6 = makeLine('Until now.', ['size-xl', 'color-red']);
+    await showLine(l6, 0);
+
+    // ACT 3: Building visualization
+    clearLines(2800);
+    await new Promise(r => setTimeout(r, 3500));
+    buildingStage.classList.add('visible');
+
+    // Overlay stats on word-stage
+    await new Promise(r => setTimeout(r, 1200));
+    let l7 = makeLine('RozeAI reads 10,000 data points per second.', ['size-sm']);
+    await showLine(l7, 0);
+    let l8 = makeLine('It learned from a decade of real disasters.', ['size-sm']);
+    await showLine(l8, 1500);
+    let l9 = makeLine('It sees what humans cannot.', ['size-sm', 'color-gold']);
+    await showLine(l9, 3000);
+
+    // Alert trigger — node flashes red
+    setTimeout(() => {
+      document.getElementById('n4').classList.remove('active');
+      document.getElementById('n4').classList.add('alert');
+      document.getElementById('alert-ring').style.display = 'block';
+      pulseRed(0);
+    }, 5000);
+
+    // System responds — nodes turn green
+    setTimeout(() => {
+      ['n1','n2','n3','n4','n5','n6','n7','n8','n9','n10','n11','n12'].forEach((id, i) => {
+        setTimeout(() => {
+          const n = document.getElementById(id);
+          n.classList.remove('active', 'alert');
+          n.classList.add('safe');
+        }, i * 80);
+      });
+    }, 7000);
+
+    // ACT 4: "And it acts..."
+    clearLines(6000);
+    await new Promise(r => setTimeout(r, 7000));
+    buildingStage.style.opacity = '0.15'; // fade building to bg
+
+    let l10 = makeLine('And it acts...', ['size-xl']);
+    await showLine(l10, 500);
+
+    // Counter 0.3s display
+    let counterEl = document.createElement('div');
+    counterEl.id = 'counter-display';
+    counterEl.style.cssText = 'font-family:Space Grotesk,sans-serif;font-size:clamp(32px,6vw,80px);font-weight:700;color:#FF2D20;letter-spacing:0.1em;opacity:0;margin:4px 0;transition:opacity 0.3s ease;';
+    counterEl.textContent = '0.3 sec';
+    wordStage.appendChild(counterEl);
+    setTimeout(() => { counterEl.style.opacity = '1'; }, 1800);
+
+    let l11 = makeLine('...before the alarm sounds.', ['size-sm']);
+    await showLine(l11, 2600);
+    let l12 = makeLine('Before the smoke rises.', ['size-sm']);
+    await showLine(l12, 3600);
+
+    // ACT 5: BEFORE.
+    clearLines(4800);
+    await new Promise(r => setTimeout(r, 5500));
+    buildingStage.style.opacity = '0';
+    massiveBefore.classList.add('visible');
+
+    // ACT 6: Final card
+    setTimeout(() => {
+      massiveBefore.style.opacity = '0';
+      finalCard.classList.add('visible');
+    }, 4000);
+
+    // Loop
+    setTimeout(() => { location.reload(); }, 10000);
+  }
+
+  run();
+</script>
+</body>
+</html>
