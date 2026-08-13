@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=720, initial-scale=1.0">
+<title>$RZAI — RozeAI Nasdaq IPO</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 720px;
+    height: 1280px;
+    overflow: hidden;
+    background: #000;
+    font-family: 'Space Grotesk', sans-serif;
+    cursor: none;
+    user-select: none;
+  }
+
+  #stage {
+    position: relative;
+    width: 720px;
+    height: 1280px;
+    overflow: hidden;
+    background: #000;
+  }
+
+  /* ── PROGRESS BAR ── */
+  #progress-wrap {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: rgba(255,255,255,0.12);
+    z-index: 1000;
+  }
+  #progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00e5ff, #00ff88);
+    width: 0%;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 8px #00e5ff;
+  }
+
+  /* ── SCENE BASE ── */
+  .scene {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .scene.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ── CAPTION ── */
+  .caption {
+    position: absolute;
+    bottom: 140px;
+    left: 0; right: 0;
+    padding: 0 48px;
+    text-align: center;
+    z-index: 100;
+  }
+  .caption-text {
+    display: block;
+    font-size: 52px;
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.15;
+    text-shadow:
+      0 0 40px rgba(0,229,255,0.6),
+      0 4px 24px rgba(0,0,0,0.9),
+      2px 2px 0 rgba(0,0,0,0.8);
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .caption-text.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━
+     SCENE 1 — FOG / EMBER
+  ━━━━━━━━━━━━━━━━━━━ */
+  #s1 { background: #000; }
+
+  #fog-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━
+     SCENE 2 — SENSOR
+  ━━━━━━━━━━━━━━━━━━━ */
+  #s2 {
+    background: radial-gradient(ellipse 60% 60% at 50% 30%, #0a2a2a 0%, #050f12 60%, #000 100%);
+  }
+  .sensor-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -80px;
+  }
+  /* Concrete wall plate */
+  .sensor-plate {
+    position: relative;
+    width: 280px;
+    height: 220px;
+    background:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 28px,
+        rgba(255,255,255,0.03) 28px,
+        rgba(255,255,255,0.03) 30px
+      ),
+      linear-gradient(160deg, #1a1e22 0%, #111418 40%, #0d1012 100%);
+    border-radius: 8px;
+    border: 1px solid #263040;
+    box-shadow:
+      inset 0 2px 4px rgba(255,255,255,0.04),
+      0 0 60px rgba(0,229,255,0.15),
+      0 20px 80px rgba(0,0,0,0.8);
+  }
+  /* Spotlight from above */
+  .sensor-spotlight {
+    position: absolute;
+    top: -300px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 300px;
+    background: linear-gradient(180deg, transparent 0%, rgba(0,229,255,0.6) 100%);
+    filter: blur(8px);
+  }
+  .sensor-spotlight::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(ellipse, rgba(0,229,255,0.25) 0%, transparent 70%);
+    filter: blur(20px);
+  }
+  /* Main sensor body */
+  .sensor-body {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 160px;
+    height: 140px;
+    background: linear-gradient(145deg, #1c2830 0%, #0e1820 50%, #080f14 100%);
+    border-radius: 10px;
+    border: 1.5px solid #2a4050;
+    box-shadow:
+      inset 0 1px 2px rgba(255,255,255,0.08),
+      inset 0 -2px 4px rgba(0,0,0,0.6),
+      0 0 30px rgba(0,229,255,0.2),
+      0 8px 32px rgba(0,0,0,0.7);
+  }
+  /* Lens */
+  .sensor-lens {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -60%);
+    width: 72px;
+    height: 72px;
+    background: radial-gradient(circle at 35% 35%,
+      rgba(0,200,255,0.35) 0%,
+      rgba(0,80,120,0.8) 40%,
+      #010a10 70%,
+      #000 100%
+    );
+    border-radius: 50%;
+    border: 2px solid #1a3a50;
+    box-shadow:
+      0 0 20px rgba(0,180,255,0.4),
+      0 0 60px rgba(0,100,200,0.2),
+      inset 0 0 20px rgba(0,0,0,0.8);
+  }
+  .sensor-lens::before {
+    content: '';
+    position: absolute;
+    top: 18%; left: 20%;
+    width: 28px; height: 28px;
+    background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .sensor-lens::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,200,255,0.3);
+    box-shadow: 0 0 10px rgba(0,200,255,0.2);
+  }
+  /* Bolts */
+  .bolt {
+    position: absolute;
+    width: 10px; height: 10px;
+    background: radial-gradient(circle at 40% 30%, #3a5060, #1a2a35);
+    border-radius: 50%;
+    border: 1px solid #263848;
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.1);
+  }
+  .bolt:nth-child(1) { top: 10px; left: 10px; }
+  .bolt:nth-child(2) { top: 10px; right: 10px; }
+  .bolt:nth-child(3) { bottom: 10px; left: 10px; }
+  .bolt:nth-child(4) { bottom: 10px; right: 10px; }
+  /* Status LED */
+  .sensor-led {
+    position: absolute;
+    bottom: 18px; left: 50%;
+    transform: translateX(-50%);
+    width: 8px; height: 8px;
+    background: #00ff88;
+    border-radius: 50%;
+    box-shadow: 0 0 12px #00ff88, 0 0 24px rgba(0,255,136,0.5);
+    animation: ledPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes ledPulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 12px #00ff88, 0 0 24px rgba(0,255,136,0.5); }
+    50% { opacity: 0.4; box-shadow: 0 0 4px #00ff88; }
+  }
+  /* Vent slots */
+  .sensor-vents {
+    position: absolute;
+    bottom: 28px; right: 14px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .vent {
+    width: 24px; height: 2px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 1px;
+  }
+  /* Data label */
+  .sensor-label {
+    position: absolute;
+    top: -36px; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Space Grotesk', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    color: rgba(0,229,255,0.7);
+    white-space: nowrap;
+  }
+  /* Atmosphere haze behind sensor */
+  .sensor-haze {
+    position: absolute;
+    inset: -60px;
+    background: radial-gradient(ellipse 80% 60% at 50% 50%,
+      rgba(0,80,100,0.3) 0%, transparent 70%);
+    filter: blur(30px);
+  }
+  /* Teal atmosphere particles */
+  .atm-particle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(0,229,255,0.15);
+    animation: atmFloat linear infinite;
+  }
+  @keyframes atmFloat {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 0.6; }
+    100% { transform: translateY(-300px) translateX(var(--drift)); opacity: 0; }
+  }
+  /* Grid overlay */
+  .sensor-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━
+     SCENE 3 — COMMAND CENTER
+  ━━━━━━━━━━━━━━━━━━━ */
+  #s3 {
+    background: radial-gradient(ellipse 80% 60% at 50% 40%, #051520 0%, #020a10 50%, #000 100%);
+  }
+  .cmd-center {
+    position: relative;
+    width: 680px;
+    height: 680px;
+    margin-top: -100px;
+  }
+  /* Floor glow */
+  .cmd-floor {
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 40px;
+    background: rgba(0,150,255,0.15);
+    filter: blur(20px);
+    border-radius: 50%;
+  }
+  /* Curved screen arc — left */
+  .screen {
+    position: absolute;
+    border-radius: 12px;
+    border: 1px solid rgba(0,200,255,0.3);
+    overflow: hidden;
+    box-shadow:
+      0 0 20px rgba(0,180,255,0.3),
+      inset 0 0 30px rgba(0,0,0,0.5);
+  }
+  .screen-content {
+    width: 100%; height: 100%;
+    background: #020e18;
+    position: relative;
+    overflow: hidden;
+  }
+  .screen-scanline {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.15) 3px,
+      rgba(0,0,0,0.15) 4px
+    );
+    pointer-events: none;
+  }
+  /* data lines on screens */
+  .data-line {
+    position: absolute;
+    left: 8px; right: 8px;
+    height: 2px;
+    border-radius: 1px;
+    background: rgba(0,229,255,0.6);
+    animation: dataScroll 2s ease-in-out infinite;
+  }
+  @keyframes dataScroll {
+    0% { transform: scaleX(0); transform-origin: left; opacity: 1; }
+    50% { transform: scaleX(1); transform-origin: left; opacity: 1; }
+    51% { transform: scaleX(1); transform-origin: right; }
+    100% { transform: scaleX(0); transform-origin: right; opacity: 0.3; }
+  }
+  /* main big center screen */
+  .screen-main {
+    left: 140px; top: 80px;
+    width: 400px; height: 260px;
+  }
+  .screen-left {
+    left: 20px; top: 140px;
+    width: 140px; height: 180px;
+    transform: perspective(600px) rotateY(25deg);
+  }
+  .screen-right {
+    right: 20px; top: 140px;
+    width: 140px; height: 180px;
+    transform: perspective(600px) rotateY(-25deg);
+  }
+  /* Workstation silhouette */
+  .workstation {
+    position: absolute;
+    bottom: 120px;
+    left: 50%; transform: translateX(-50%);
+    width: 300px; height: 80px;
+  }
+  .desk {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 12px;
+    background: linear-gradient(90deg, #0a1520, #152030, #0a1520);
+    border-radius: 4px;
+    box-shadow: 0 0 20px rgba(0,100,200,0.3);
+  }
+  .monitor-small {
+    position: absolute;
+    bottom: 12px;
+    width: 60px; height: 44px;
+    background: linear-gradient(135deg, #050e18, #020a12);
+    border: 1px solid rgba(0,180,255,0.25);
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(0,180,255,0.2);
+  }
+  .monitor-small.m1 { left: 40px; }
+  .monitor-small.m2 { left: 120px; height: 52px; }
+  .monitor-small.m3 { right: 40px; }
+  /* Person silhouette */
+  .person-silhouette {
+    position: absolute;
+    bottom: 12px; left: 50%;
+    transform: translateX(-50%);
+    width: 30px; height: 50px;
+  }
+  .person-head {
+    width: 16px; height: 16px;
+    background: #08141e;
+    border-radius: 50%;
+    margin: 0 auto;
+    box-shadow: 0 0 8px rgba(0,150,255,0.3);
+  }
+  .person-body {
+    width: 22px; height: 32px;
+    background: linear-gradient(180deg, #0a1820, #050e16);
+    border-radius: 4px 4px 0 0;
+    margin: 2px auto 0;
+    box-shadow: 0 0 10px rgba(0,100,200,0.2);
+  }
+  /* Ambient particles */
+  .cmd-particle {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: rgba(0,200,255,0.8);
+    border-radius: 50%;
+    animation: cmdParticle linear infinite;
+  }
+  @keyframes cmdParticle {
+    0% { transform: translateY(400px) translateX(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 0.5; }
+    100% { transform: translateY(-200px) translateX(var(--drift)); opacity: 0; }
+  }
+  /* Counter display */
+  .counter-display {
+    position: absolute;
+    top: 20px; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Space Grotesk', monospace;
+    font-size: 42px;
+    font-weight: 700;
+    color: #00e5ff;
+    text-shadow: 0 0 20px rgba(0,229,255,0.8);
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━
+     SCENE 4 — MILITARY BADGE
+  ━━━━━━━━━━━━━━━━━━━ */
+  #s4 {
+    background: radial-gradient(ellipse 60% 60% at 50% 40%, #060510 0%, #020108 60%, #000 100%);
+  }
+  .badge-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -60px;
+  }
+  /* Outer ring */
+  .badge-outer {
+    position: relative;
+    width: 340px; height: 340px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      #1a1200, #3a2a00, #c8900a, #e8aa10, #c8900a, #3a2a00, #1a1200,
+      #3a2a00, #c8900a, #e8aa10, #c8900a, #3a2a00, #1a1200
+    );
+    box-shadow:
+      0 0 40px rgba(200,140,10,0.4),
+      0 0 80px rgba(200,140,10,0.2),
+      inset 0 0 20px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Decorative notches on outer ring */
+  .badge-outer::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    border: 2px solid rgba(200,160,20,0.4);
+  }
+  /* Inner circle */
+  .badge-inner {
+    width: 290px; height: 290px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 30%,
+      #0d1230 0%, #060818 50%, #020408 100%
+    );
+    border: 2px solid rgba(180,130,10,0.5);
+    box-shadow:
+      inset 0 0 40px rgba(0,0,0,0.8),
+      0 0 20px rgba(200,140,10,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Stars pattern */
+  .badge-inner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(255,220,100,0.6) 1px, transparent 1px);
+    background-size: 28px 28px;
+    opacity: 0.15;
+  }
+  /* Eagle wings */
+  .eagle {
+    position: relative;
+    width: 200px; height: 80px;
+    margin-bottom: 8px;
+  }
+  .wing {
+    position: absolute;
+    top: 0;
+    width: 90px; height: 70px;
+    border-radius: 50% 0 0 0;
+    background: linear-gradient(135deg, #b8860b 0%, #daa520 30%, #8b6914 70%, #4a3800 100%);
+    clip-path: polygon(0 100%, 100% 60%, 90% 0, 70% 20%, 50% 5%, 30% 20%, 10% 0, 0 30%);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  .wing.left { left: 0; transform: scaleX(1); }
+  .wing.right { right: 0; transform: scaleX(-1); }
+  .eagle-body {
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 28px; height: 36px;
+    background: linear-gradient(180deg, #c8960c, #8b6800);
+    border-radius: 40% 40% 30% 30%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  .eagle-head {
+    position: absolute;
+    top: -14px; left: 50%;
+    transform: translateX(-50%);
+    width: 18px; height: 18px;
+    background: radial-gradient(circle at 40% 35%, #daa520, #8b6500);
+    border-radius: 50% 50% 40% 40%;
+  }
+  .eagle-beak {
+    position: absolute;
+    top: 8px; right: -6px;
+    width: 10px; height: 5px;
+    background: #c8960c;
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+  }
+  /* Badge text ring */
+  .badge-text-top {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    color: rgba(218,165,32,0.9);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .badge-text-bottom {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    color: rgba(218,165,32,0.7);
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+  .badge-stars {
+    font-size: 14px;
+    color: rgba(218,165,32,0.8);
+    letter-spacing: 0.3em;
+    margin-top: 4px;
+  }
+  /* Badge glow */
+  .badge-glow {
+    position: absolute;
+    inset: -40px;
+    background: radial-gradient(ellipse, rgba(200,140,10,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━
+     SCENE 5 — STOCK CHART
+  ━━━━━━━━━━━━━━━━━━━ */
+  #s5 {
+    background: #000a08;
+  }
+  .chart-terminal {
+    position: absolute;
+    inset: 40px 20px;
+    background: linear-gradient(180deg, #010e08 0%, #000a06 100%);
+    border: 1px solid rgba(0,255,100,0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow:
+      0 0 40px rgba(0,200,80,0.1),
+      inset 0 0 40px rgba(0,0,0,0.5);
+  }
+  .chart-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(0,255,100,0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .chart-ticker {
+    font-family: 'Space Grotesk', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: #00ff88;
+    letter-spacing: 0.1em;
+  }
+  .chart-price {
+    font-family: 'Space Grotesk', monospace;
+    font-size: 18px;
+    color: #00ff66;
+    font-weight: 600;
+  }
+  .chart-change {
+    font-size: 14px;
+    color: #00ff44;
+    background: rgba(0,255,80,0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(0,255,80,0.2);
+  }
+  .chart-canvas-wrap {
+    padding: 20px 10px 10px;
+    position: relative;
+  }
+  #chart-canvas {
+    display: block;
+    width: 100%;
+  }
+  /* Y-axis labels */
+  .chart-yaxis {
+    position: absolute;
+    right: 14px; top: 20px; bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .y-label {
+    font-family: 'Space Grotesk', monospace;
+    font-size: 11px;
+    color: rgba(0,255,100,0.4);
+    text-align: right;
+  }
+  /* Volume bars */
+  .chart-volume {
+    padding: 0 10px 10px;
+  }
+  /* Scanlines */
+  .chart-scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.08) 3px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━
+     SCENE 6 — RZAI LOGO
+  ━━━━━━━━━━━━━━━━━━━ */
+  #s6 {
+    background: radial-gradient(ellipse 70% 70% at 50% 40%, #030820 0%, #010410 50%, #000 100%);
+  }
+  .logo-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    margin-top: -80px;
+  }
+  /* Stylized R in circuit board */
+  .logo-r-container {
+    position: relative;
+    width: 220px; height: 220px;
+  }
+  .logo-r-hex {
+    position: absolute;
+    inset: 0;
+    border-radius: 20%;
+    background: linear-gradient(135deg, #050d20, #0a1535);
+    border: 2px solid rgba(0,200,255,0.3);
+    box-shadow:
+      0 0 60px rgba(0,150,255,0.3),
+      0 0 120px rgba(0,100,255,0.15),
+      inset 0 0 40px rgba(0,0,0,0.6);
+  }
+  /* Circuit traces */
+  .circuit-trace {
+    position: absolute;
+    background: rgba(0,200,255,0.25);
+    border-radius: 1px;
+  }
+  /* Corner pads */
+  .circuit-pad {
+    position: absolute;
+    width: 8px; height: 8px;
+    background: rgba(0,200,255,0.5);
+    border-radius: 2px;
+    box-shadow: 0 0 6px rgba(0,200,255,0.5);
+    animation: padPulse 2s ease-in-out infinite;
+  }
+  @keyframes padPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  /* The R letterform */
+  .logo-r-letter {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 120px;
+    font-weight: 800;
+    color: transparent;
+    -webkit-text-stroke: 3px rgba(0,229,255,0.9);
+    text-shadow:
+      0 0 40px rgba(0,229,255,0.6),
+      0 0 80px rgba(0,150,255,0.3);
+    line-height: 1;
+  }
+  /* Gold accent bar */
+  .logo-gold-bar {
+    width: 180px; height: 3px;
+    background: linear-gradient(90deg, transparent, #daa520, #f0c040, #daa520, transparent);
+    box-shadow: 0 0 16px rgba(218,165,32,0.6);
+    border-radius: 2px;
+  }
+  /* Company name */
+  .logo-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    color: #fff;
+    text-shadow: 0 0 30px rgba(0,200,255,0.5);
+  }
+  .logo-tagline {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.3em;
+    color: rgba(0,200,255,0.7);
+    text-transform: uppercase;
+  }
+  /* Orbit ring */
+  .logo-orbit {
+    position: absolute;
+    inset: -30px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,200,255,0.15);
+    animation: orbitSpin 8s linear infinite;
+  }
+  .logo-orbit-dot {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+    width: 8px; height: 8px;
+    background: #00e5ff;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #00e5ff;
+  }
+  @keyframes orbitSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━
+     SCENE 7 — END CARD
+  ━━━━━━━━━━━━━━━━━━━ */
+  #s7 {
+    background: radial-gradient(ellipse 60% 50% at 50% 40%, #050a14 0%, #020508 70%, #000 100%);
+  }
+  .end-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    padding: 60px 48px;
+    text-align: center;
+  }
+  .end-divider {
+    width: 120px; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,255,0.6), transparent);
+    border-radius: 1px;
+  }
+  .end-big {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 44px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+    text-shadow: 0 0 30px rgba(0,200,255,0.4);
+    text-transform: uppercase;
+  }
+  .end-url {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: #daa520;
+    letter-spacing: 0.03em;
+    text-shadow:
+      0 0 20px rgba(218,165,32,0.7),
+      0 0 40px rgba(218,165,32,0.3);
+  }
+  .end-small {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .end-logo-small {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: rgba(0,200,255,0.8);
+  }
+  /* Decorative corner elements */
+  .corner {
+    position: absolute;
+    width: 40px; height: 40px;
+    border-color: rgba(0,200,255,0.3);
+    border-style: solid;
+  }
+  .corner-tl { top: 30px; left: 30px; border-width: 2px 0 0 2px; }
+  .corner-tr { top: 30px; right: 30px; border-width: 2px 2px 0 0; }
+  .corner-bl { bottom: 30px; left: 30px; border-width: 0 0 2px 2px; }
+  .corner-br { bottom: 30px; right: 30px; border-width: 0 2px 2px 0; }
+
+  /* ── GLOBAL PARTICLES ── */
+  .global-particle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: globalFloat linear infinite;
+  }
+  @keyframes globalFloat {
+    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+    10% { opacity: var(--max-opacity); }
+    90% { opacity: calc(var(--max-opacity) * 0.3); }
+    100% { transform: translateY(-20vh) translateX(var(--drift)); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- ── S1: FOG / EMBER ── -->
+  <div class="scene active" id="s1">
+    <canvas id="fog-canvas"></canvas>
+    <div class="caption">
+      <span class="caption-text" id="cap1">FIRES KILLED 350,000 PEOPLE LAST YEAR.</span>
+    </div>
+  </div>
+
+  <!-- ── S2: SENSOR ── -->
+  <div class="scene" id="s2">
+    <div class="sensor-grid"></div>
+    <div class="sensor-wrap">
+      <div class="sensor-spotlight"></div>
+      <div class="sensor-plate">
+        <div class="sensor-body">
+          <div class="bolt"></div>
+          <div class="bolt"></div>
+          <div class="bolt"></div>
+          <div class="bolt"></div>
+          <div class="sensor-lens"></div>
+          <div class="sensor-led"></div>
+          <div class="sensor-vents">
+            <div class="vent"></div>
+            <div class="vent"></div>
+            <div class="vent"></div>
+          </div>
+        </div>
+        <div class="sensor-haze"></div>
+      </div>
+      <div class="sensor-label">ROZEAI · MODEL RS-4X · THERMAL+GAS SENSOR</div>
+    </div>
+    <div class="caption">
+      <span class="caption-text" id="cap2">ONE COMPANY SAYS IT CAN STOP THEM.</span>
+    </div>
+  </div>
+
+  <!-- ── S3: COMMAND CENTER ── -->
+  <div class="scene" id="s3">
+    <div class="cmd-center">
+      <div class="counter-display" id="counter">10,000</div>
+
+      <!-- screens -->
+      <div class="screen screen-main">
+        <div class="screen-content">
+          <div class="data-line" style="top:20%; animation-delay:0s; animation-duration:1.8s; background:rgba(0,229,255,0.7);"></div>
+          <div class="data-line" style="top:35%; animation-delay:0.3s; animation-duration:2.2s;"></div>
+          <div class="data-line" style="top:50%; animation-delay:0.6s; animation-duration:1.5s; background:rgba(0,255,136,0.6);"></div>
+          <div class="data-line" style="top:65%; animation-delay:0.9s; animation-duration:2s;"></div>
+          <div class="data-line" style="top:80%; animation-delay:0.2s; animation-duration:1.7s; background:rgba(255,160,0,0.5);"></div>
+          <canvas id="cmd-canvas" width="400" height="260"></canvas>
+          <div class="screen-scanline"></div>
+        </div>
+      </div>
+      <div class="screen screen-left">
+        <div class="screen-content">
+          <div class="data-line" style="top:25%; animation-delay:0.4s;"></div>
+          <div class="data-line" style="top:55%; animation-delay:0.8s;"></div>
+          <div class="data-line" style="top:80%; animation-delay:1.2s;"></div>
+          <div class="screen-scanline"></div>
+        </div>
+      </div>
+      <div class="screen screen-right">
+        <div class="screen-content">
+          <div class="data-line" style="top:30%; animation-delay:0.5s;"></div>
+          <div class="data-line" style="top:60%; animation-delay:1s;"></div>
+          <div class="data-line" style="top:85%; animation-delay:0.1s;"></div>
+          <div class="screen-scanline"></div>
+        </div>
+      </div>
+
+      <!-- workstation -->
+      <div class="workstation">
+        <div class="monitor-small m1"></div>
+        <div class="monitor-small m2"></div>
+        <div class="monitor-small m3"></div>
+        <div class="desk"></div>
+      </div>
+
+      <div class="cmd-floor"></div>
+    </div>
+    <div class="caption">
+      <span class="caption-text" id="cap3">10,000 DATA POINTS. EVERY SECOND.</span>
+    </div>
+  </div>
+
+  <!-- ── S4: MILITARY BADGE ── -->
+  <div class="scene" id="s4">
+    <div class="badge-wrap">
+      <div class="badge-outer">
+        <div class="badge-inner">
+          <div class="eagle">
+            <div class="wing left"></div>
+            <div class="wing right"></div>
+            <div class="eagle-body">
+              <div class="eagle-head">
+                <div class="eagle-beak"></div>
+              </div>
+            </div>
+          </div>
+          <div class="badge-text-top">REPUBLIC OF KOREA</div>
+          <div class="badge-stars">★ ★ ★</div>
+          <div class="badge-text-bottom">AIR FORCE · CERTIFIED</div>
+        </div>
+      </div>
+      <div class="badge-glow"></div>
+    </div>
+    <div class="caption">
+      <span class="caption-text" id="cap4">TRUSTED BY THE KOREAN AIR FORCE.</span>
+    </div>
+  </div>
+
+  <!-- ── S5: STOCK CHART ── -->
+  <div class="scene" id="s5">
+    <div class="chart-terminal">
+      <div class="chart-scanlines"></div>
+      <div class="chart-header">
+        <span class="chart-ticker">$RZAI</span>
+        <span class="chart-price" id="chart-price">$12.40</span>
+        <span class="chart-change">+847%</span>
+      </div>
+      <div class="chart-canvas-wrap">
+        <canvas id="chart-canvas" width="660" height="600"></canvas>
+        <div class="chart-yaxis">
+          <span class="y-label">$50</span>
+          <span class="y-label">$40</span>
+          <span class="y-label">$30</span>
+          <span class="y-label">$20</span>
+          <span class="y-label">$10</span>
+        </div>
+      </div>
+    </div>
+    <div class="caption">
+      <span class="caption-text" id="cap5">$27 BILLION MARKET. ONE IPO.</span>
+    </div>
+  </div>
+
+  <!-- ── S6: RZAI LOGO ── -->
+  <div class="scene" id="s6">
+    <div class="logo-wrap">
+      <div class="logo-r-container">
+        <div class="logo-r-hex">
+          <!-- Circuit traces horizontal -->
+          <div class="circuit-trace" style="width:30px;height:2px;top:20px;left:10px;"></div>
+          <div class="circuit-trace" style="width:20px;height:2px;bottom:20px;right:10px;"></div>
+          <div class="circuit-trace" style="width:2px;height:30px;top:10px;right:20px;"></div>
+          <div class="circuit-trace" style="width:2px;height:20px;bottom:10px;left:20px;"></div>
+          <!-- Corner pads -->
+          <div class="circuit-pad" style="top:12px;left:12px;animation-delay:0s;"></div>
+          <div class="circuit-pad" style="top:12px;right:12px;animation-delay:0.5s;"></div>
+          <div class="circuit-pad" style="bottom:12px;left:12px;animation-delay:1s;"></div>
+          <div class="circuit-pad" style="bottom:12px;right:12px;animation-delay:1.5s;"></div>
+        </div>
+        <div class="logo-orbit">
+          <div class="logo-orbit-dot"></div>
+        </div>
+        <div class="logo-r-letter">R</div>
+      </div>
+      <div class="logo-gold-bar"></div>
+      <div class="logo-name">ROZEAI</div>
+      <div class="logo-tagline">Fire Intelligence · Nasdaq: RZAI</div>
+    </div>
+    <div class="caption">
+      <span class="caption-text" id="cap6">$RZAI — NASDAQ IPO — DON'T MISS IT.</span>
+    </div>
+  </div>
+
+  <!-- ── S7: END CARD ── -->
+  <div class="scene" id="s7">
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+    <div class="end-card">
+      <div class="end-logo-small">$RZAI</div>
+      <div class="end-divider"></div>
+      <div class="end-big">GET THE FULL<br>INVESTOR REPORT</div>
+      <div class="end-divider"></div>
+      <div class="end-url">TheSmallCapSignal.com</div>
+      <div class="end-small">$RZAI · Nasdaq IPO · Paid Awareness Content</div>
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div id="progress-wrap">
+    <div id="progress-fill"></div>
+  </div>
+
+</div><!-- end stage -->
+
+<script>
+// ── SCENE MANAGER ──────────────────────────────────────────────
+const SCENE_DURATION = 4000; // ms per scene
+const TRANSITION_MS  = 300;
+const TOTAL_SCENES   = 7;
+let currentScene = 1;
+let sceneTimer = null;
+let progressTimer = null;
+let progressStart = null;
+
+const scenes = Array.from({length: TOTAL_SCENES}, (_, i) => document.getElementById('s' + (i+1)));
+const captions = Array.from({length: TOTAL_SCENES}, (_, i) => document.getElementById('cap' + (i+1)));
+const progressFill = document.getElementById('progress-fill');
+
+function goToScene(n) {
+  // hide all
+  scenes.forEach(s => s.classList.remove('active'));
+  captions.forEach(c => { if(c) c.classList.remove('show'); });
+
+  currentScene = n;
+  const s = scenes[n-1];
+  s.classList.add('active');
+
+  // show caption after brief delay
+  const cap = captions[n-1];
+  if (cap) {
+    setTimeout(() => cap.classList.add('show'), 400);
+  }
+
+  // scene-specific init
+  if (n === 1) initFog();
+  if (n === 3) initCmdCanvas();
+  if (n === 5) initChart();
+
+  // start progress
+  progressStart = Date.now();
+  updateProgress();
+}
+
+function nextScene() {
+  let next = currentScene + 1;
+  if (next > TOTAL_SCENES) {
+    // Pause 3s on end card then loop
+    setTimeout(() => goToScene(1), 3000);
+    return;
+  }
+  goToScene(next);
+}
+
+function updateProgress() {
+  if (progressTimer) cancelAnimationFrame(progressTimer);
+  const animate = () => {
+    const elapsed = Date.now() - progressStart;
+    const totalProgress = ((currentScene - 1) * SCENE_DURATION + elapsed) / (TOTAL_SCENES * SCENE_DURATION);
+    progressFill.style.width = Math.min(totalProgress * 100, 100) + '%';
+    if (elapsed < SCENE_DURATION) {
+      progressTimer = requestAnimationFrame(animate);
+    }
+  };
+  progressTimer = requestAnimationFrame(animate);
+}
+
+// Auto advance
+function scheduleNext() {
+  if (sceneTimer) clearTimeout(sceneTimer);
+  sceneTimer = setTimeout(() => {
+    nextScene();
+    scheduleNext();
+  }, SCENE_DURATION);
+}
+
+// ── SCENE 1: FOG & EMBERS ──────────────────────────────────────
+function initFog() {
+  const canvas = document.getElementById('fog-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 720;
+  canvas.height = 1280;
+
+  const particles = [];
+  const embers = [];
+
+  // Fog particles
+  for (let i = 0; i < 120; i++) {
+    particles.push({
+      x: Math.random() * 720,
+      y: Math.random() * 1280,
+      r: Math.random() * 80 + 20,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: -Math.random() * 0.15 - 0.05,
+      opacity: Math.random() * 0.08 + 0.02,
+      phase: Math.random() * Math.PI * 2,
+    });
+  }
+
+  // Ember particles
+  for (let i = 0; i < 60; i++) {
+    embers.push({
+      x: Math.random() * 720,
+      y: 1280 + Math.random() * 200,
+      r: Math.random() * 3 + 1,
+      vx: (Math.random() - 0.5) * 1.5,
+      vy: -Math.random() * 2 - 1,
+      life: Math.random(),
+      maxLife: Math.random() * 0.5 + 0.5,
+      hue: Math.random() * 40 + 10,
+    });
+  }
+
+  let animId;
+  let t = 0;
+
+  function drawFrame() {
+    ctx.clearRect(0, 0, 720, 1280);
+
+    // Deep black bg
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, 720, 1280);
+
+    // Ember glow at bottom
+    const glowGrad = ctx.createRadialGradient(360, 1280, 0, 360, 1280, 400);
+    glowGrad.addColorStop(0, 'rgba(180,60,10,0.35)');
+    glowGrad.addColorStop(0.4, 'rgba(120,30,5,0.15)');
+    glowGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = glowGrad;
+    ctx.fillRect(0, 800, 720, 480);
+
+    // Fog wisps
+    particles.forEach(p => {
+      const pulse = Math.sin(t * 0.01 + p.phase) * 0.02;
+      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+      grad.addColorStop(0, `rgba(40,60,80,${p.opacity + pulse})`);
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y, p.r * 1.8, p.r, 0, 0, Math.PI * 2);
+      ctx.fill();
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.y < -100) p.y = 1380;
+      if (p.x < -100) p.x = 820;
+      if (p.x > 820) p.x = -100;
+    });
+
+    // Embers
+    embers.forEach(e => {
+      e.x += e.vx + Math.sin(t * 0.02 + e.life) * 0.5;
+      e.y += e.vy;
+      e.life -= 0.003;
+      if (e.life <= 0 || e.y < -20) {
+        e.x = Math.random() * 720;
+        e.y = 1280 + Math.random() * 50;
+        e.life = e.maxLife;
+        e.vx = (Math.random() - 0.5) * 1.5;
+        e.vy = -Math.random() * 2 - 0.5;
+      }
+      const alpha = Math.min(e.life * 2, 1) * 0.9;
+      const grad = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.r * 3);
+      grad.addColorStop(0, `hsla(${e.hue},100%,80%,${alpha})`);
+      grad.addColorStop(0.4, `hsla(${e.hue},90%,50%,${alpha * 0.5})`);
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.r * 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = `hsla(${e.hue + 20},100%,90%,${alpha})`;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.r * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    t++;
+    animId = requestAnimationFrame(drawFrame);
+  }
+
+  drawFrame();
+
+  // Stop when scene changes
+  const obs = new MutationObserver(() => {
+    if (!document.getElementById('s1').classList.contains('active')) {
+      cancelAnimationFrame(animId);
+      obs.disconnect();
+    }
+  });
+  obs.observe(document.getElementById('s1'), {attributes: true, attributeFilter: ['class']});
+}
+
+// ── SCENE 3: COMMAND CENTER CANVAS ───────────────────────────
+function initCmdCanvas() {
+  const canvas = document.getElementById('cmd-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let t = 0;
+  let animId;
+
+  function draw() {
+    ctx.clearRect(0, 0, 400, 260);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(0,200,255,0.06)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < 400; x += 20) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 260); ctx.stroke();
+    }
+    for (let y = 0; y < 260; y += 20) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(400, y); ctx.stroke();
+    }
+
+    // Animated waveform
+    ctx.strokeStyle = 'rgba(0,229,255,0.8)';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#00e5ff';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    for (let x = 0; x < 400; x++) {
+      const y = 130 +
+        Math.sin(x * 0.04 + t * 0.08) * 40 +
+        Math.sin(x * 0.09 + t * 0.05) * 20 +
+        Math.sin(x * 0.02 + t * 0.12) * 15;
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Second wave (green)
+    ctx.strokeStyle = 'rgba(0,255,136,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let x = 0; x < 400; x++) {
+      const y = 180 +
+        Math.sin(x * 0.06 + t * 0.06 + 1) * 25 +
+        Math.cos(x * 0.03 + t * 0.09) * 15;
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    t++;
+    animId = requestAnimationFrame(draw);
+  }
+  draw();
+
+  const obs = new MutationObserver(() => {
+    if (!document.getElementById('s3').classList.contains('active')) {
+      cancelAnimationFrame(animId);
+      obs.disconnect();
+    }
+  });
+  obs.observe(document.getElementById('s3'), {attributes: true, attributeFilter: ['class']});
+
+  // Counter animation
+  const counterEl = document.getElementById('counter');
+  let count = 0;
+  const target = 10000;
+  const countInterval = setInterval(() => {
+    count = Math.min(count + 250, target);
+    counterEl.textContent = count.toLocaleString();
+    if (count >= target) clearInterval(countInterval);
+  }, 40);
+}
+
+// ── SCENE 5: STOCK CHART ──────────────────────────────────────
+function initChart() {
+  const canvas = document.getElementById('chart-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = 660, H = 600;
+
+  // Generate price data that surges dramatically
+  const data = [];
+  let price = 4.50;
+  for (let i = 0; i < 100; i++) {
+    if (i < 40) {
+      price += (Math.random() - 0.45) * 0.3;
+    } else if (i < 60) {
+      price += Math.random() * 0.8;
+    } else {
+      price += Math.random() * 2.2 + 0.3;
+    }
+    price = Math.max(3, price);
+    data.push(price);
+  }
+
+  const maxP = Math.max(...data);
+  const minP = Math.min(...data);
+  const pad = { top: 30, right: 50, bottom: 40, left: 20 };
+  const chartW = W - pad.left - pad.right;
+  const chartH = H - pad.top - pad.bottom;
+
+  function priceToY(p) {
+    return pad.top + chartH - ((p - minP) / (maxP - minP)) * chartH;
+  }
+  function idxToX(i, total) {
+    return pad.left + (i / (total - 1)) * chartW;
+  }
+
+  let progress = 0;
+  let animId;
+
+  function drawChart() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#010e08';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(0,255,100,0.07)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 5; i++) {
+      const y = pad.top + (i / 5) * chartH;
+      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+    }
+    for (let i = 0; i <= 8; i++) {
+      const x = pad.left + (i / 8) * chartW;
+      ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, H - pad.bottom); ctx.stroke();
+    }
+
+    const drawn = Math.max(2, Math.floor(progress * data.length));
+
+    // Fill area
+    const fillGrad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
+    fillGrad.addColorStop(0, 'rgba(0,255,120,0.35)');
+    fillGrad.addColorStop(1, 'rgba(0,255,120,0.02)');
+    ctx.fillStyle = fillGrad;
+    ctx.beginPath();
+    ctx.moveTo(idxToX(0, data.length), H - pad.bottom);
+    for (let i = 0; i < drawn; i++) {
+      ctx.lineTo(idxToX(i, data.length), priceToY(data[i]));
+    }
+    ctx.lineTo(idxToX(drawn - 1, data.length), H - pad.bottom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Price line
+    ctx.shadowColor = '#00ff88';
+    ctx.shadowBlur = 12;
+    ctx.strokeStyle = '#00ff88';
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (let i = 0; i < drawn; i++) {
+      const x = idxToX(i, data.length);
+      const y = priceToY(data[i]);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Dot at tip
+    if (drawn > 1) {
+      const tipX = idxToX(drawn - 1, data.length);
+      const tipY = priceToY(data[drawn - 1]);
+      ctx.shadowColor = '#00ff88';
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = '#00ff88';
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // price label
+      const currentPrice = data[drawn - 1];
+      document.getElementById('chart-price').textContent = '$' + currentPrice.toFixed(2);
+    }
+
+    // Volume bars
+    const barW = chartW / data.length * 0.7;
+    for (let i = 0; i < drawn; i++) {
+      const barH = 20 + Math.random() * 40;
+      const x = idxToX(i, data.length) - barW / 2;
+      const alpha = i > 40 ? (i > 60 ? 0.7 : 0.4) : 0.2;
+      ctx.fillStyle = `rgba(0,255,100,${alpha})`;
+      ctx.fillRect(x, H - pad.bottom - barH, barW, barH);
+    }
+
+    if (progress < 1) {
+      progress = Math.min(progress + 0.012, 1);
+      animId = requestAnimationFrame(drawChart);
+    }
+  }
+
+  drawChart();
+
+  const obs = new MutationObserver(() => {
+    if (!document.getElementById('s5').classList.contains('active')) {
+      cancelAnimationFrame(animId);
+      obs.disconnect();
+    }
+  });
+  obs.observe(document.getElementById('s5'), {attributes: true, attributeFilter: ['class']});
+}
+
+// ── ATMOSPHERE PARTICLES (scenes 2 & 6) ──────────────────────
+function spawnAtmParticles() {
+  const s2 = document.getElementById('s2');
+  for (let i = 0; i < 25; i++) {
+    const p = document.createElement('div');
+    const size = Math.random() * 4 + 1;
+    p.className = 'atm-particle';
+    p.style.cssText = `
+      left: ${Math.random() * 100}%;
+      bottom: ${Math.random() * 40}%;
+      width: ${size}px;
+      height: ${size}px;
+      --drift: ${(Math.random() - 0.5) * 80}px;
+      animation-duration: ${Math.random() * 6 + 5}s;
+      animation-delay: ${Math.random() * 5}s;
+    `;
+    s2.appendChild(p);
+  }
+}
+
+function spawnGlobalParticles() {
+  const stage = document.getElementById('stage');
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    const size = Math.random() * 2 + 0.5;
+    p.className = 'global-particle';
+    p.style.cssText = `
+      left: ${Math.random() * 100}%;
+      width: ${size}px;
+      height: ${size}px;
+      background: rgba(0,200,255,${Math.random() * 0.3 + 0.05});
+      --drift: ${(Math.random() - 0.5) * 60}px;
+      --max-opacity: ${Math.random() * 0.4 + 0.1};
+      animation-duration: ${Math.random() * 12 + 8}s;
+      animation-delay: ${Math.random() * 10}s;
+      z-index: 50;
+      pointer-events: none;
+    `;
+    stage.appendChild(p);
+  }
+}
+
+// ── BOOT ─────────────────────────────────────────────────────
+spawnAtmParticles();
+spawnGlobalParticles();
+goToScene(1);
+scheduleNext();
+</script>
+</body>
+</html>
